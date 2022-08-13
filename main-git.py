@@ -10,7 +10,7 @@ from spacy.tokenizer import Tokenizer
 from spacy import displacy
 from spacy import tokens
 from spacy.tokens import DocBin
-
+import random
 
 nlp = spacy.load("en_core_web_sm")
 from spacy.lang.en.stop_words import STOP_WORDS
@@ -159,6 +159,7 @@ sumup=0
 summ_doc={}
 summ_dict={}
 harmunic_dict={}
+vertex_dictionary={}
 for file1 in doc_list:
 	for file2 in doc_list:
 		f1 = open(f"{path}/{file1}").read()
@@ -175,6 +176,9 @@ for file1 in doc_list:
 				H=3/sumup
 				harmunic_list.append(H)
 				summ_list.append(x)
+				vertex=file2+'_S'+str(len(summ_list))
+				if vertex not in vertex_dictionary:
+					vertex_dictionary[vertex]=random.uniform(0,1)
 			list_h.append(harmunic_list)
 			list_array.append(summ_list)
 		name= file1+"_"+file2
@@ -184,3 +188,4 @@ for file1 in doc_list:
 			# summ_doc.fromkeys(x[summ_dict[i]])
 print(summ_dict)
 print(harmunic_dict)
+print(vertex_dictionary)
