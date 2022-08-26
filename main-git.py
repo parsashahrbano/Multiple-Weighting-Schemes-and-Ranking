@@ -11,7 +11,7 @@ from spacy import displacy
 from spacy import tokens
 from spacy.tokens import DocBin
 import random
-
+import re
 nlp = spacy.load("en_core_web_sm")
 from spacy.lang.en.stop_words import STOP_WORDS
 
@@ -184,8 +184,26 @@ for file1 in doc_list:
 		name= file1+"_"+file2
 		harmunic_dict[name]=list_h
 		summ_dict[name]=list_array
-			# x=len(doc_list)
-			# summ_doc.fromkeys(x[summ_dict[i]])
-print(summ_dict)
-print(harmunic_dict)
-print(vertex_dictionary)
+# PageRank
+# print(vertex_dictionary)
+# print(summ_dict)
+neighbor_dict={}
+for k1 in vertex_dictionary.keys():
+	doc1_name=k1[0:int(k1.find("_"))]
+	s_num=k1[int(k1.find("_"))+2:len(k1)]
+	list_neighbor=[]
+	for k,d in summ_dict.items():
+		doc2_name=k[0:int(k.find("_"))]
+		doc3_name=k[int(k.find("_"))+1:len(k)+1]
+		if (doc1_name==doc2_name): # and doc1_name != k[int(k.find("_"))+1:len(k)+1]
+			for index,date in enumerate(d[int(s_num)-1]):
+				tmp_dict={}
+				tmp_dict[doc3_name+"_S"+str(index+1)]= date
+				list_neighbor.append(tmp_dict)
+	neighbor_dict[k1]=list_neighbor
+
+print(neighbor_dict)
+# print(dictionary_value)
+# print(summ_dict)
+# print(harmunic_dict)
+# print(vertex_dictionary)
