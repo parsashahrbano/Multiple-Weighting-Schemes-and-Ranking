@@ -207,3 +207,14 @@ print(neighbor_dict)
 # print(summ_dict)
 # print(harmunic_dict)
 # print(vertex_dictionary)
+
+
+n=0
+sum_list_PR_values={}
+for i , j in neighbor_dict.items():
+	n=0
+	for k in j:
+		for l , m in k.items():
+			n+=m
+			sum_list_PR_values[i]=n
+print(sum_list_PR_values)
