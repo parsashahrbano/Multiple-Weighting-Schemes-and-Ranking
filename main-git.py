@@ -184,9 +184,9 @@ for file1 in doc_list:
 		name= file1+"_"+file2
 		harmunic_dict[name]=list_h
 		summ_dict[name]=list_array
-# PageRank
 # print(vertex_dictionary)
 # print(summ_dict)
+# PageRank
 neighbor_dict={}
 for k1 in vertex_dictionary.keys():
 	doc1_name=k1[0:int(k1.find("_"))]
@@ -202,7 +202,7 @@ for k1 in vertex_dictionary.keys():
 				list_neighbor.append(tmp_dict)
 	neighbor_dict[k1]=list_neighbor
 
-print(neighbor_dict)
+# print(neighbor_dict)
 # print(dictionary_value)
 # print(summ_dict)
 # print(harmunic_dict)
@@ -217,4 +217,34 @@ for i , j in neighbor_dict.items():
 		for l , m in k.items():
 			n+=m
 			sum_list_PR_values[i]=n
-print(sum_list_PR_values)
+# print(sum_list_PR_values)
+whole_zigma_vertex_dictionary={}
+g=0
+for i , j in neighbor_dict.items():
+	for k in j:
+		for m , n in k.items():
+			for p , q in sum_list_PR_values.items():
+				for u , v in vertex_dictionary.items():
+					if (m==p):
+						if (p==u):
+							g=(n/float(q))*v
+							whole_zigma_vertex_dictionary[i]=g
+# print(whole_zigma_vertex_dictionary)
+p=1
+zigma_second_fraction={}
+for m , n in whole_zigma_vertex_dictionary.items():
+	p=n*0.85
+	zigma_second_fraction[m]=p
+# print(zigma_second_fraction)
+PR_final_list=[]
+for i , j in neighbor_dict.items():
+	for k,l in zigma_second_fraction.items():
+		if(i==k):
+			N=len(j)
+			PR_formula=(0.15/float(N))*l
+			PR_final_list.append(PR_formula)
+print(PR_final_list)
+# End_Of_PR
+
+
+
