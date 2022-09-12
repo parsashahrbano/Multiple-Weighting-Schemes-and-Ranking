@@ -159,7 +159,7 @@ sumup=0
 summ_doc={}
 summ_dict={}
 harmunic_dict={}
-vertex_dictionary={}
+Page_Rank_vertex_initialization={}
 for file1 in doc_list:
 	for file2 in doc_list:
 		f1 = open(f"{path}/{file1}").read()
@@ -177,18 +177,18 @@ for file1 in doc_list:
 				harmunic_list.append(H)
 				summ_list.append(x)
 				vertex=file2+'_S'+str(len(summ_list))
-				if vertex not in vertex_dictionary:
-					vertex_dictionary[vertex]=random.uniform(0,1)
+				if vertex not in Page_Rank_vertex_initialization:
+					Page_Rank_vertex_initialization[vertex]=random.uniform(0,1)
 			list_h.append(harmunic_list)
 			list_array.append(summ_list)
 		name= file1+"_"+file2
 		harmunic_dict[name]=list_h
 		summ_dict[name]=list_array
-# print(vertex_dictionary)
+# print(Page_Rank_vertex_initialization)
 # print(summ_dict)
 # PageRank
 neighbor_dict={}
-for k1 in vertex_dictionary.keys():
+for k1 in Page_Rank_vertex_initialization.keys():
 	doc1_name=k1[0:int(k1.find("_"))]
 	s_num=k1[int(k1.find("_"))+2:len(k1)]
 	list_neighbor=[]
@@ -206,7 +206,6 @@ for k1 in vertex_dictionary.keys():
 # print(dictionary_value)
 # print(summ_dict)
 # print(harmunic_dict)
-# print(vertex_dictionary)
 
 
 n=0
@@ -217,14 +216,14 @@ for i , j in neighbor_dict.items():
 		for l , m in k.items():
 			n+=m
 			sum_list_PR_values[i]=n
-# print(sum_list_PR_values)
+print(sum_list_PR_values)
 whole_zigma_vertex_dictionary={}
 g=0
 for i , j in neighbor_dict.items():
 	for k in j:
 		for m , n in k.items():
 			for p , q in sum_list_PR_values.items():
-				for u , v in vertex_dictionary.items():
+				for u , v in Page_Rank_vertex_initialization.items():
 					if (m==p):
 						if (p==u):
 							g=(n/float(q))*v
@@ -243,7 +242,7 @@ for i , j in neighbor_dict.items():
 			N=len(j)
 			PR_formula=(0.15/float(N))*l
 			PR_final_list.append(PR_formula)
-print(PR_final_list)
+# print(PR_final_list)
 # End_Of_PR
 
 
