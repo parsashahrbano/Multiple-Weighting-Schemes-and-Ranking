@@ -216,7 +216,7 @@ for i , j in neighbor_dict.items():
 		for l , m in k.items():
 			n+=m
 			sum_list_PR_values[i]=n
-print(sum_list_PR_values)
+# print(sum_list_PR_values)
 whole_zigma_vertex_dictionary={}
 g=0
 for i , j in neighbor_dict.items():
@@ -245,5 +245,55 @@ for i , j in neighbor_dict.items():
 # print(PR_final_list)
 # End_Of_PR
 
+
+#HITS Algorithm
+HITS_inialize={}
+for i , j in sum_list_PR_values.items():
+	HITS_inialize[i]=1
+
+old_HITS={}
+sum_old_HITS=0
+for k, l in neighbor_dict.items():
+	sum_old_HITS=0
+	for m in l:
+		for p, q in m.items():
+			for i, j in HITS_inialize.items():
+				if (i==p):
+					sum_old_HITS+=q*j
+					old_HITS[k]=sum_old_HITS
+
+old_HITS_normalize={}
+sum_value=0
+for i, j in old_HITS.items():
+	sum_value=sum(old_HITS.values())
+	old_HITS_normalize[i]=j/float(sum_value)
+
+
+sum_new_HITS=0
+new_HITS={}
+for k, l in neighbor_dict.items():
+	sum_new_HITS=0
+	for m in l :
+		for i,j in m. items():
+			for p,q in old_HITS.items():
+				if (p==i):
+					sum_new_HITS+=j*q
+					new_HITS[k]=sum_new_HITS
+	
+new_HITS_normalize={}
+new_sum_value=0
+for i, j in new_HITS.items():
+	new_sum_value=sum(new_HITS.values())
+	new_HITS_normalize[i]=j/float(new_sum_value)
+				
+
+
+
+# print(new_HITS)
+print(old_HITS_normalize)
+print(new_HITS_normalize)
+# print(HITS_inial)
+# print(old_HITS)
+# print(HITS_normalize)
 
 
