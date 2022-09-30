@@ -247,51 +247,51 @@ for i , j in neighbor_dict.items():
 
 
 #HITS Algorithm
-HITS_inialize={}
-for i , j in sum_list_PR_values.items():
-	HITS_inialize[i]=1
-
 old_HITS={}
-sum_old_HITS=0
-for k, l in neighbor_dict.items():
-	sum_old_HITS=0
-	for m in l:
-		for p, q in m.items():
-			for i, j in HITS_inialize.items():
-				if (i==p):
-					sum_old_HITS+=q*j
-					old_HITS[k]=sum_old_HITS
+for i , j in sum_list_PR_values.items():
+	old_HITS[i]=1
 
-old_HITS_normalize={}
-sum_value=0
-for i, j in old_HITS.items():
-	sum_value=sum(old_HITS.values())
-	old_HITS_normalize[i]=j/float(sum_value)
-
-
-sum_new_HITS=0
-new_HITS={}
-for k, l in neighbor_dict.items():
+k=10
+for w in range(0, k):
 	sum_new_HITS=0
-	for m in l :
-		for i,j in m. items():
-			for p,q in old_HITS.items():
-				if (p==i):
-					sum_new_HITS+=j*q
-					new_HITS[k]=sum_new_HITS
-	
-new_HITS_normalize={}
-new_sum_value=0
-for i, j in new_HITS.items():
-	new_sum_value=sum(new_HITS.values())
-	new_HITS_normalize[i]=j/float(new_sum_value)
+	new_HITS={}
+	for k, l in neighbor_dict.items():
+		sum_new_HITS=0
+		for m in l :
+			for i,j in m. items():
+				for p,q in old_HITS.items():
+					if (p==i):
+						sum_new_HITS+=j*q
+						new_HITS[k]=sum_new_HITS
+
+
+
+	new_HITS_normalize={}
+	new_sum_value=0
+	for i, j in new_HITS.items():
+		new_sum_value=sum(new_HITS.values())
+		new_HITS_normalize[i]=j/float(new_sum_value)
+		old_HITS=new_HITS_normalize.copy()
+
+					
+	#HITS_Convergence
+	Epsilon=0.5
+	zigma_convergence={}
+	for i, j in new_HITS_normalize.items():
+		for p,q in old_HITS.items():
+			if (i==p)and ((j-q)<Epsilon) :
+				zigma_convergence[i]=j
+			
 				
 
 
 
+
+
 # print(new_HITS)
-print(old_HITS_normalize)
-print(new_HITS_normalize)
+print(zigma_convergence)
+# print(old_HITS)
+# print(new_HITS_normalize)
 # print(HITS_inial)
 # print(old_HITS)
 # print(HITS_normalize)
