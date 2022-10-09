@@ -258,40 +258,39 @@ for w in range(0, k):
 	for k, l in neighbor_dict.items():
 		sum_new_HITS=0
 		for m in l :
-			for i,j in m. items():
+			for i,j in m.items():
 				for p,q in old_HITS.items():
 					if (p==i):
 						sum_new_HITS+=j*q
-						new_HITS[k]=sum_new_HITS
+		new_HITS[k]=sum_new_HITS
 
 
-
+	#normalization
 	new_HITS_normalize={}
 	new_sum_value=0
+	new_sum_value=sum(new_HITS.values())
 	for i, j in new_HITS.items():
-		new_sum_value=sum(new_HITS.values())
 		new_HITS_normalize[i]=j/float(new_sum_value)
-		old_HITS=new_HITS_normalize.copy()
 
 					
-	#HITS_Convergence
-	Epsilon=0.5
-	zigma_convergence={}
-	for i, j in new_HITS_normalize.items():
-		for p,q in old_HITS.items():
-			if (i==p)and ((j-q)<Epsilon) :
-				zigma_convergence[i]=j
-			
-				
+	# #HITS_Convergence
+	# Epsilon=0.5
+	# for i in range(0, len(new_HITS_normalize.values())-1):
+	# 	# minus=(new_HITS_normalize[i]-old_HITS[i])**2
+	# 	print(new_HITS_normalize[i])
+	# if minus < Epsilon:
+	# 	break
+	# else:
+	# 	old_HITS=new_HITS_normalize.copy()
 
 
 
 
 
 # print(new_HITS)
-print(zigma_convergence)
+print(w)
 # print(old_HITS)
-# print(new_HITS_normalize)
+print(new_HITS_normalize)
 # print(HITS_inial)
 # print(old_HITS)
 # print(HITS_normalize)
