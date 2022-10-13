@@ -206,42 +206,42 @@ for k1 in Page_Rank_vertex_initialization.keys():
 # print(dictionary_value)
 # print(summ_dict)
 # print(harmunic_dict)
-
-
-n=0
-sum_list_PR_values={}
-for i , j in neighbor_dict.items():
+k=10
+for w in range(0, k):
 	n=0
-	for k in j:
-		for l , m in k.items():
-			n+=m
-			sum_list_PR_values[i]=n
-# print(sum_list_PR_values)
-whole_zigma_vertex_dictionary={}
-g=0
-for i , j in neighbor_dict.items():
-	for k in j:
-		for m , n in k.items():
-			for p , q in sum_list_PR_values.items():
-				for u , v in Page_Rank_vertex_initialization.items():
-					if (m==p):
-						if (p==u):
-							g=(n/float(q))*v
-							whole_zigma_vertex_dictionary[i]=g
-# print(whole_zigma_vertex_dictionary)
-p=1
-zigma_second_fraction={}
-for m , n in whole_zigma_vertex_dictionary.items():
-	p=n*0.85
-	zigma_second_fraction[m]=p
-# print(zigma_second_fraction)
-PR_final_list=[]
-for i , j in neighbor_dict.items():
-	for k,l in zigma_second_fraction.items():
-		if(i==k):
-			N=len(j)
-			PR_formula=(0.15/float(N))*l
-			PR_final_list.append(PR_formula)
+	sum_list_PR_values={}
+	for i , j in neighbor_dict.items():
+		n=0
+		for k in j:
+			for l , m in k.items():
+				n+=m
+				sum_list_PR_values[i]=n
+	# print(sum_list_PR_values)
+	whole_zigma_vertex_dictionary={}
+	g=0
+	for i , j in neighbor_dict.items():
+		for k in j:
+			for m , n in k.items():
+				for p , q in sum_list_PR_values.items():
+					for u , v in Page_Rank_vertex_initialization.items():
+						if (m==p):
+							if (p==u):
+								g=(n/float(q))*v
+								whole_zigma_vertex_dictionary[i]=g
+	# print(whole_zigma_vertex_dictionary)
+	p=1
+	zigma_second_fraction={}
+	for m , n in whole_zigma_vertex_dictionary.items():
+		p=n*0.85
+		zigma_second_fraction[m]=p
+	# print(zigma_second_fraction)
+	PR_final_list={}
+	for i , j in neighbor_dict.items():
+		for k,l in zigma_second_fraction.items():
+			if(i==k):
+				N=len(j)
+				PR_formula=(0.15/float(N))*l
+				PR_final_list[i]=PR_formula
 # print(PR_final_list)
 # End_Of_PR
 
@@ -273,15 +273,16 @@ for w in range(0, k):
 		new_HITS_normalize[i]=j/float(new_sum_value)
 
 					
-	# #HITS_Convergence
-	# Epsilon=0.5
-	# for i in range(0, len(new_HITS_normalize.values())-1):
-	# 	# minus=(new_HITS_normalize[i]-old_HITS[i])**2
-	# 	print(new_HITS_normalize[i])
-	# if minus < Epsilon:
-	# 	break
-	# else:
-	# 	old_HITS=new_HITS_normalize.copy()
+	#HITS_Convergence
+	Epsilon=0.00000001
+	convert_dict1=list(new_HITS_normalize.values())
+	convert_dict2=list(old_HITS.values())
+	for i in range(0, len(convert_dict1)-1):
+		minus=(convert_dict1[i]-convert_dict2[i])**2
+	if minus < Epsilon:
+		break
+	else:
+		old_HITS=new_HITS_normalize.copy()
 
 
 
