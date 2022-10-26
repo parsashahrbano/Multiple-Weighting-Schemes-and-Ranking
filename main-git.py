@@ -184,9 +184,13 @@ for file1 in doc_list:
 		name= file1+"_"+file2
 		harmunic_dict[name]=list_h
 		summ_dict[name]=list_array
-# print(Page_Rank_vertex_initialization)
+
+print(Page_Rank_vertex_initialization)
+print(summ_dict)
+# print(neighbor_dict)
+# print(dictionary_value)
 # print(summ_dict)
-# PageRank
+# print(harmunic_dict)
 neighbor_dict={}
 for k1 in Page_Rank_vertex_initialization.keys():
 	doc1_name=k1[0:int(k1.find("_"))]
@@ -201,13 +205,8 @@ for k1 in Page_Rank_vertex_initialization.keys():
 				tmp_dict[doc3_name+"_S"+str(index+1)]= date
 				list_neighbor.append(tmp_dict)
 	neighbor_dict[k1]=list_neighbor
-
-# print(neighbor_dict)
-# print(dictionary_value)
-# print(summ_dict)
-# print(harmunic_dict)
 k=10
-for w in range(0, k):
+for R in range(0, k):
 	n=0
 	sum_list_PR_values={}
 	for i , j in neighbor_dict.items():
@@ -242,9 +241,17 @@ for w in range(0, k):
 				N=len(j)
 				PR_formula=(0.15/float(N))*l
 				PR_final_list[i]=PR_formula
+	Epsilon=0.01
+	convert_dict1=list(PR_final_list.values())
+	convert_dict2=list(Page_Rank_vertex_initialization.values())
+	for i in range(0, len(convert_dict1)-1):
+		minus=(convert_dict1[i]-convert_dict2[i])**2
+	if minus < Epsilon:
+		break
+	else:
+		Page_Rank_vertex_initialization=PR_final_list.copy()
 # print(PR_final_list)
-# End_Of_PR
-
+# print(R)
 
 #HITS Algorithm
 old_HITS={}
@@ -289,9 +296,9 @@ for w in range(0, k):
 
 
 # print(new_HITS)
-print(w)
+# print(w)
 # print(old_HITS)
-print(new_HITS_normalize)
+# print(new_HITS_normalize)
 # print(HITS_inial)
 # print(old_HITS)
 # print(HITS_normalize)
