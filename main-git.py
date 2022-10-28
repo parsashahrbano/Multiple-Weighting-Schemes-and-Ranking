@@ -17,6 +17,16 @@ from spacy.lang.en.stop_words import STOP_WORDS
 
 
 
+def get_sentens(doc, sent_number):
+	d = nlp(doc)
+	index = 1
+	for s in d.sents:
+		if index == int(sent_numb):
+			return s
+		else:
+			index += 1
+
+
 def jaccard_similarity(list1, list2):
 	s1 = set(list1)
 	s2 = set(list2)	
@@ -102,8 +112,6 @@ def identitysimilarity(s1, s2):
 	return prod_ident
 
 
-
-
 def similarity(doc1, doc2):
 	doc_bin = DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE"], store_user_data=True)
 	d1 = nlp(doc1)
@@ -178,15 +186,17 @@ for file1 in doc_list:
 				summ_list.append(x)
 				vertex=file2+'_S'+str(len(summ_list))
 				if vertex not in Page_Rank_vertex_initialization:
-					Page_Rank_vertex_initialization[vertex]=random.uniform(0,1)
+					Page_Rank_vertex_initialization[vertex]=random.uniform(0,0.5)
 			list_h.append(harmunic_list)
 			list_array.append(summ_list)
 		name= file1+"_"+file2
 		harmunic_dict[name]=list_h
 		summ_dict[name]=list_array
 
-print(Page_Rank_vertex_initialization)
-print(summ_dict)
+
+
+# print(Page_Rank_vertex_initialization)
+# print(summ_dict)
 # print(neighbor_dict)
 # print(dictionary_value)
 # print(summ_dict)
@@ -241,7 +251,7 @@ for R in range(0, k):
 				N=len(j)
 				PR_formula=(0.15/float(N))*l
 				PR_final_list[i]=PR_formula
-	Epsilon=0.01
+	Epsilon=0.8
 	convert_dict1=list(PR_final_list.values())
 	convert_dict2=list(Page_Rank_vertex_initialization.values())
 	for i in range(0, len(convert_dict1)-1):
@@ -250,6 +260,7 @@ for R in range(0, k):
 		break
 	else:
 		Page_Rank_vertex_initialization=PR_final_list.copy()
+
 # print(PR_final_list)
 # print(R)
 
@@ -291,11 +302,43 @@ for w in range(0, k):
 	else:
 		old_HITS=new_HITS_normalize.copy()
 
+# Harmonic between PageRank and HITS
+Harmonic_between_2_algo={}
+for i, j in PR_final_list.items():
+	for k, l in new_HITS_normalize.items():
+		if (i==k):
+			n=(1/float(j))+(1/float(l))
+			Harmonic_between_2_algo[i]=2/n
+
+
+# for i in doc_list:
+# 	for k,l in Harmonic_between_2_algo.items():
+# 		doc1_name=k[0:int(k.find("_"))]
+# 		if (doc1_name==i):
+# 			open(f"{path}/{doc1_name}").read()
+# 			if (doc1_name=="!")and(doc1_name=="?")and(doc1_name=="."):
+# 				break
+# 			else:
+				
+
+n_sentns = 5
+harmonic_sorted = sorted(Harmonic_between_2_algo.items(), key=lambda x: x[1], reverse=True)
+
+for i in range(0, n_sentns):
+	k,d = harmonic_sorted[i]
+	doc_name = k[0:int(k.find("_"))]
+	sent_numb = k[int(k.find("_"))+2:len(k)]
+	f1 = open(f"{path}/{doc_name}").read()
+	print (doc_name , sent_numb , d)
+	print(get_sentens(f1 , sent_numb))
+
+
 
 
 
 
 # print(new_HITS)
+# print(Harmonic_between_2_algo)
 # print(w)
 # print(old_HITS)
 # print(new_HITS_normalize)
