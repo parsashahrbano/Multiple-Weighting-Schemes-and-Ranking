@@ -16,20 +16,42 @@ nlp = spacy.load("en_core_web_sm")
 from spacy.lang.en.stop_words import STOP_WORDS
 
 
+from time import time
+import re  
+import nltk  
+from sklearn.datasets import load_files  
+# nltk.download('stopwords')  
+import pickle  
+# from nltk.corpus import stopwords
+from sklearn.model_selection import train_test_split
+
+
 
 def get_sentens(doc, sent_number):
 	d = nlp(doc)
 	index = 1
 	for s in d.sents:
-		if index == int(sent_numb):
+		if index == int(sent_numb) + 1:
 			return s
 		else:
 			index += 1
 
+def classification():
+	doc_data = load_files(r"D:\txt_sentoken")  
+	X, y = doc_data.data, doc_data.target 
+	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+	classifier = RandomForestClassifier(n_estimators=1000, random_state=0)  
+	classifier.fit(X_train, y_train)
+	y_pred = classifier.predict(X_test)
+
+
+	with open('text_classifier', 'wb') as picklefile:
+		pickle.dump(classifier,picklefile)
+
 
 def jaccard_similarity(list1, list2):
 	s1 = set(list1)
-	s2 = set(list2)	
+	s2 = set(list2)
 	if len(s1.union(s2)):
 		return float(len(s1.intersection(s2)) / len(s1.union(s2)))
 	else:
@@ -111,6 +133,8 @@ def identitysimilarity(s1, s2):
 	prod_ident=fraction_1*sec_fraction
 	return prod_ident
 
+def topic_signature ():
+	pass
 
 def similarity(doc1, doc2):
 	doc_bin = DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE"], store_user_data=True)
@@ -136,6 +160,9 @@ def similarity(doc1, doc2):
 			else:
 				idf_d2 [t] = 1
 	# print(idf_d1)
+	jacard_time = 0.0
+	cosine_time = 0.0
+	identity_time = 0.0
 	for sentence1 in d1.sents:
 		score_list1 = []
 		score_list2 = []
@@ -143,22 +170,137 @@ def similarity(doc1, doc2):
 		s1 = [token.lemma_.lower() for token in sentence1 if token.is_stop == False and token.text.isalpha() == True]
 		for sentence2 in d2.sents:
 			s2 = [token.lemma_.lower() for token in sentence2 if token.is_stop == False and token.text.isalpha() == True]
+			ts1 = time()
 			score_list1.append(jaccard_similarity(s1, s2))
+			jacard_time += time()-ts1
+			ts2 = time()
 			score_list2.append(cosine_similarity(s1, s2, idf_d1, idf_d2))
+			cosine_time += time()-ts2
+			ts3 = time()
 			score_list3.append(identitysimilarity(s1, s2))
+			identity_time += time()-ts3
 		jaccard_score.append(score_list1)
 		cosine_score.append(score_list2)
 		identity_score.append(score_list3)
+	if jacard_time == 0.0 : 
+		print (jaccard_score)
+	print ("jaccard time : {}".format(jacard_time))
+	print ("cosine time : {}".format(cosine_time))
+	print ("identity time : {}".format(identity_time))
 	return jaccard_score, cosine_score, identity_score
 
+def hits (summ_dict):
+	neighbors = {}
+	hits = {}
+	for k, d in summ_dict.items():
+		doc1 = k[0:int(k.find("_"))]
+		doc2 = k[int(k.find("_"))+1:len(k)+1]
+		for index,data in enumerate(d):
+			vertex = doc1 + '_S' + str(index)
+			neighbor_list = []
+			if vertex not in hits:
+				hits[vertex] = 1
+			else:
+				neighbor_list = neighbors[vertex]
+			for ind , data2 in enumerate(data):
+				tmp = {}
+				if data2 != 0 :
+					tmp[doc2 + '_S' + str(ind)] = data2
+					neighbor_list.append(tmp)
+			neighbors[vertex] = neighbor_list
+	replit = 10
+	epsilon = 0.0000008
+	new_hits = {}
+	for r in range(replit):
+		print('hits repets : %d' % r , end='\r')
+		convergence = 0
+		for vi , hits_vi in hits.items():
+			sum_vi = 0
+			for n_vi in neighbors[vi]:
+				vj = list(n_vi.keys())[0]
+				dj = list(n_vi.values())[0]
+				sum_vi += dj * hits[vj]
+			new_hits[vi] = sum_vi
+		#normalize and convergence
+		norm = sum (new_hits.values())
+		for vi , hits_vi in new_hits.items():
+			new_hits[vi] = hits_vi / norm
+			convergence += ( new_hits[vi] - hits[vi] ) **2 
+		if convergence <= epsilon:
+			break
+		else:
+			hits = new_hits.copy()
+	print()
+	return new_hits
+
+def pageRank (summ_dict):
+	page_rank = {}
+	neighbors = {}
+	#initialaze PageRank and find neighbors
+	for k, d in summ_dict.items():
+		doc1 = k[0:int(k.find("_"))]
+		doc2 = k[int(k.find("_"))+1:len(k)+1]
+		for index,data in enumerate(d):
+			vertex = doc1 + '_S' + str(index)
+			neighbor_list = []
+			if vertex not in page_rank:
+				page_rank[vertex] = random.uniform(0,0.5)
+			else:
+				neighbor_list = neighbors[vertex]
+			for ind , data2 in enumerate(data):
+				tmp = {}
+				if data2 != 0 :
+					tmp[doc2 + '_S' + str(ind)] = data2
+					neighbor_list.append(tmp)
+			neighbors[vertex] = neighbor_list
+	#calculate Page Rank
+	
+	n = len(neighbors.keys())
+	# print(n)
+	d = 0.85
+	epsilon = 0.0000008
+	replit = 10
+	new_page_rank = {}
+	for r in range(replit):
+		print('Page rank repets : %d' % r , end='\r')
+		convergence = 0
+		for vi , pr_vi in page_rank.items():
+			# print("Vi", vi, pr_vi)
+			sum_vi = 0
+			for n_vi in neighbors[vi]:
+				# print("n_vi", n_vi)
+				if bool(n_vi):
+					vj = list(n_vi.keys())[0]
+					dj = list(n_vi.values())[0]
+					sim_vj_vz = 0.0
+					for n_vj in neighbors[vj]:
+						# print("n_vj", n_vj)
+						if bool(n_vj):
+							vz = list(n_vj.keys())[0]
+							dz = list(n_vj.values())[0]
+							sim_vj_vz += dz
+							# print(vi,vj,dj,vz,dz, sim_vj_vz)
+					sum_vi += (dj / sim_vj_vz) * page_rank[vj]
+					# print(sum_vi)
+			# print("*******************************")
+			new_page_rank[vi] = (1 - d) / n + d * sum_vi
+		norm = sum(new_page_rank.values())
+		for vi , PR_vi in new_page_rank.items():
+			new_page_rank[vi] = PR_vi / norm
+			convergence += (page_rank[vi] - new_page_rank[vi]) **2 
+		if convergence <= epsilon:
+			break
+		else:
+			page_rank = new_page_rank.copy()
+	print()
+	return page_rank
 
 
 path = sys.argv[1]
 os.chdir(path)
 path = os.getcwd()
-
-
 doc_list = []
+
 for file in os.listdir():
 	if file.endswith(".story"):
 		doc_list.append(file)
@@ -167,12 +309,23 @@ sumup=0
 summ_doc={}
 summ_dict={}
 harmunic_dict={}
-Page_Rank_vertex_initialization={}
+doc1_count = 1
+doc_list_size = len(doc_list)
+# Page_Rank_vertex_initialization={}
+# page_rank={}
 for file1 in doc_list:
+	doc2_count = 1
+	f1 = open(f"{path}/{file1}")
+	fr1 = f1.read()
 	for file2 in doc_list:
-		f1 = open(f"{path}/{file1}").read()
-		f2 = open(f"{path}/{file2}").read()
-		l1, l2, l3 = similarity(f1,f2)
+		ts1 = time()
+		print('Document : %d / %d ( %d )' % (doc1_count, doc2_count, doc_list_size))
+		doc2_count += 1
+		f2 = open(f"{path}/{file2}")
+		fr2 = f2.read()
+		ts2 = time()
+		l1, l2, l3 = similarity(fr1,fr2)
+		print("similarity time : {}".format(time() - ts2))
 		list_array=[]
 		list_h=[]
 		for i in range(0 , len(l1)-1):
@@ -180,19 +333,24 @@ for file1 in doc_list:
 			summ_list=[]
 			for j in range(0, len(l1[i])-1):
 				x=(l1[i][j]+l2[i][j]+l3[i][j])/3.0
-				sumup=(1/l1[i][j])+(1/l2[i][j])+(1/l3[i][j])
-				H=3/sumup
-				harmunic_list.append(H)
 				summ_list.append(x)
-				vertex=file2+'_S'+str(len(summ_list))
-				if vertex not in Page_Rank_vertex_initialization:
-					Page_Rank_vertex_initialization[vertex]=random.uniform(0,0.5)
-			list_h.append(harmunic_list)
+				# sumup=(1/l1[i][j])+(1/l2[i][j])+(1/l3[i][j])
+				# H=3/sumup
+				# harmunic_list.append(H)
+				# vertex=file2+'_S'+str(len(summ_list))
+				# if vertex not in page_rank:
+					# page_rank[vertex]=random.uniform(0,0.5)
+			# list_h.append(harmunic_list)
 			list_array.append(summ_list)
 		name= file1+"_"+file2
-		harmunic_dict[name]=list_h
+		# harmunic_dict[name]=list_h
 		summ_dict[name]=list_array
-
+		# f2.close()
+		print("loop time : {}".format(time() - ts1))
+	# f1.close()
+	doc1_count += 1
+print()
+print("finish similarity")
 
 
 # print(Page_Rank_vertex_initialization)
@@ -201,128 +359,41 @@ for file1 in doc_list:
 # print(dictionary_value)
 # print(summ_dict)
 # print(harmunic_dict)
-neighbor_dict={}
-for k1 in Page_Rank_vertex_initialization.keys():
-	doc1_name=k1[0:int(k1.find("_"))]
-	s_num=k1[int(k1.find("_"))+2:len(k1)]
-	list_neighbor=[]
-	for k,d in summ_dict.items():
-		doc2_name=k[0:int(k.find("_"))]
-		doc3_name=k[int(k.find("_"))+1:len(k)+1]
-		if (doc1_name==doc2_name): # and doc1_name != k[int(k.find("_"))+1:len(k)+1]
-			for index,date in enumerate(d[int(s_num)-1]):
-				tmp_dict={}
-				tmp_dict[doc3_name+"_S"+str(index+1)]= date
-				list_neighbor.append(tmp_dict)
-	neighbor_dict[k1]=list_neighbor
-k=10
-for R in range(0, k):
-	n=0
-	sum_list_PR_values={}
-	for i , j in neighbor_dict.items():
-		n=0
-		for k in j:
-			for l , m in k.items():
-				n+=m
-				sum_list_PR_values[i]=n
-	# print(sum_list_PR_values)
-	whole_zigma_vertex_dictionary={}
-	g=0
-	for i , j in neighbor_dict.items():
-		for k in j:
-			for m , n in k.items():
-				for p , q in sum_list_PR_values.items():
-					for u , v in Page_Rank_vertex_initialization.items():
-						if (m==p):
-							if (p==u):
-								g=(n/float(q))*v
-								whole_zigma_vertex_dictionary[i]=g
-	# print(whole_zigma_vertex_dictionary)
-	p=1
-	zigma_second_fraction={}
-	for m , n in whole_zigma_vertex_dictionary.items():
-		p=n*0.85
-		zigma_second_fraction[m]=p
-	# print(zigma_second_fraction)
-	PR_final_list={}
-	for i , j in neighbor_dict.items():
-		for k,l in zigma_second_fraction.items():
-			if(i==k):
-				N=len(j)
-				PR_formula=(0.15/float(N))*l
-				PR_final_list[i]=PR_formula
-	Epsilon=0.8
-	convert_dict1=list(PR_final_list.values())
-	convert_dict2=list(Page_Rank_vertex_initialization.values())
-	for i in range(0, len(convert_dict1)-1):
-		minus=(convert_dict1[i]-convert_dict2[i])**2
-	if minus < Epsilon:
-		break
-	else:
-		Page_Rank_vertex_initialization=PR_final_list.copy()
-
-# print(PR_final_list)
-# print(R)
-
-#HITS Algorithm
-old_HITS={}
-for i , j in sum_list_PR_values.items():
-	old_HITS[i]=1
-
-k=10
-for w in range(0, k):
-	sum_new_HITS=0
-	new_HITS={}
-	for k, l in neighbor_dict.items():
-		sum_new_HITS=0
-		for m in l :
-			for i,j in m.items():
-				for p,q in old_HITS.items():
-					if (p==i):
-						sum_new_HITS+=j*q
-		new_HITS[k]=sum_new_HITS
-
-
-	#normalization
-	new_HITS_normalize={}
-	new_sum_value=0
-	new_sum_value=sum(new_HITS.values())
-	for i, j in new_HITS.items():
-		new_HITS_normalize[i]=j/float(new_sum_value)
-
-					
-	#HITS_Convergence
-	Epsilon=0.00000001
-	convert_dict1=list(new_HITS_normalize.values())
-	convert_dict2=list(old_HITS.values())
-	for i in range(0, len(convert_dict1)-1):
-		minus=(convert_dict1[i]-convert_dict2[i])**2
-	if minus < Epsilon:
-		break
-	else:
-		old_HITS=new_HITS_normalize.copy()
 
 # Harmonic between PageRank and HITS
 Harmonic_between_2_algo={}
+print("start page rank ....")
+PR_final_list=pageRank(summ_dict)
+# print(PR_final_list)
+print("start hits ....")
+new_HITS_normalize=hits(summ_dict)
+# print(new_HITS_normalize)
 for i, j in PR_final_list.items():
-	for k, l in new_HITS_normalize.items():
-		if (i==k):
-			n=(1/float(j))+(1/float(l))
-			Harmonic_between_2_algo[i]=2/n
+	l = new_HITS_normalize[i]
+	if j == 0 :
+		n = 0.0 + (1/float(l))
+		# doc_name = i[0:int(i.find("_"))]
+		# sent_numb = i[int(i.find("_"))+2:len(i)]
+		# l = new_HITS_normalize[i]
+		# print(i , j , l)
+		# f1 = open(f"{path}/{doc_name}").read()
+		# print(get_sentens(f1 , sent_numb))
+	elif l == 0 :
+		n=(1/float(j)) + 0.0
+		# doc_name = i[0:int(i.find("_"))]
+		# sent_numb = i[int(i.find("_"))+2:len(i)]
+		# l = new_HITS_normalize[i]
+		# print(i , j , l)
+		# f1 = open(f"{path}/{doc_name}").read()
+		# print(get_sentens(f1 , sent_numb))
+	else :
+		n=(1/float(j))+(1/float(l))
+	Harmonic_between_2_algo[i]=2/n
 
 
-# for i in doc_list:
-# 	for k,l in Harmonic_between_2_algo.items():
-# 		doc1_name=k[0:int(k.find("_"))]
-# 		if (doc1_name==i):
-# 			open(f"{path}/{doc1_name}").read()
-# 			if (doc1_name=="!")and(doc1_name=="?")and(doc1_name=="."):
-# 				break
-# 			else:
-				
-
-n_sentns = 5
+n_sentns = 3
 harmonic_sorted = sorted(Harmonic_between_2_algo.items(), key=lambda x: x[1], reverse=True)
+# print(harmonic_sorted)
 
 for i in range(0, n_sentns):
 	k,d = harmonic_sorted[i]
@@ -345,5 +416,3 @@ for i in range(0, n_sentns):
 # print(HITS_inial)
 # print(old_HITS)
 # print(HITS_normalize)
-
-
