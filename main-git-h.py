@@ -16,6 +16,7 @@ nlp = spacy.load("en_core_web_sm")
 from spacy.lang.en.stop_words import STOP_WORDS
 
 
+from time import time
 import re  
 import nltk  
 from sklearn.datasets import load_files  
@@ -23,6 +24,7 @@ from sklearn.datasets import load_files
 import pickle  
 # from nltk.corpus import stopwords
 from sklearn.model_selection import train_test_split
+
 
 
 def get_sentens(doc, sent_number):
@@ -158,6 +160,9 @@ def similarity(doc1, doc2):
 			else:
 				idf_d2 [t] = 1
 	# print(idf_d1)
+	jacard_time = 0.0
+	cosine_time = 0.0
+	identity_time = 0.0
 	for sentence1 in d1.sents:
 		score_list1 = []
 		score_list2 = []
@@ -165,12 +170,23 @@ def similarity(doc1, doc2):
 		s1 = [token.lemma_.lower() for token in sentence1 if token.is_stop == False and token.text.isalpha() == True]
 		for sentence2 in d2.sents:
 			s2 = [token.lemma_.lower() for token in sentence2 if token.is_stop == False and token.text.isalpha() == True]
+			ts1 = time()
 			score_list1.append(jaccard_similarity(s1, s2))
+			jacard_time += time()-ts1
+			ts2 = time()
 			score_list2.append(cosine_similarity(s1, s2, idf_d1, idf_d2))
+			cosine_time += time()-ts2
+			ts3 = time()
 			score_list3.append(identitysimilarity(s1, s2))
+			identity_time += time()-ts3
 		jaccard_score.append(score_list1)
 		cosine_score.append(score_list2)
 		identity_score.append(score_list3)
+	if jacard_time == 0.0 : 
+		print (jaccard_score)
+	print ("jaccard time : {}".format(jacard_time))
+	print ("cosine time : {}".format(cosine_time))
+	print ("identity time : {}".format(identity_time))
 	return jaccard_score, cosine_score, identity_score
 
 def hits (summ_dict):
@@ -193,9 +209,10 @@ def hits (summ_dict):
 					neighbor_list.append(tmp)
 			neighbors[vertex] = neighbor_list
 	replit = 10
-	epsilon = 0.8
+	epsilon = 0.0000008
 	new_hits = {}
 	for r in range(replit):
+		print('hits repets : %d' % r , end='\r')
 		convergence = 0
 		for vi , hits_vi in hits.items():
 			sum_vi = 0
@@ -213,6 +230,7 @@ def hits (summ_dict):
 			break
 		else:
 			hits = new_hits.copy()
+	print()
 	return new_hits
 
 def pageRank (summ_dict):
@@ -226,7 +244,7 @@ def pageRank (summ_dict):
 			vertex = doc1 + '_S' + str(index)
 			neighbor_list = []
 			if vertex not in page_rank:
-				page_rank[vertex] = 1
+				page_rank[vertex] = random.uniform(0,0.5)
 			else:
 				neighbor_list = neighbors[vertex]
 			for ind , data2 in enumerate(data):
@@ -238,32 +256,33 @@ def pageRank (summ_dict):
 	#calculate Page Rank
 	
 	n = len(neighbors.keys())
-	print(n)
+	# print(n)
 	d = 0.85
-	epsilon = 0.8
+	epsilon = 0.0000008
 	replit = 10
 	new_page_rank = {}
 	for r in range(replit):
+		print('Page rank repets : %d' % r , end='\r')
 		convergence = 0
 		for vi , pr_vi in page_rank.items():
-			print("Vi", vi, pr_vi)
+			# print("Vi", vi, pr_vi)
 			sum_vi = 0
 			for n_vi in neighbors[vi]:
-				print("n_vi", n_vi)
+				# print("n_vi", n_vi)
 				if bool(n_vi):
 					vj = list(n_vi.keys())[0]
 					dj = list(n_vi.values())[0]
 					sim_vj_vz = 0.0
 					for n_vj in neighbors[vj]:
-						print("n_vj", n_vj)
+						# print("n_vj", n_vj)
 						if bool(n_vj):
 							vz = list(n_vj.keys())[0]
 							dz = list(n_vj.values())[0]
 							sim_vj_vz += dz
-							print(vi,vj,dj,vz,dz, sim_vj_vz)
+							# print(vi,vj,dj,vz,dz, sim_vj_vz)
 					sum_vi += (dj / sim_vj_vz) * page_rank[vj]
-					print(sum_vi)
-			print("*******************************")
+					# print(sum_vi)
+			# print("*******************************")
 			new_page_rank[vi] = (1 - d) / n + d * sum_vi
 		norm = sum(new_page_rank.values())
 		for vi , PR_vi in new_page_rank.items():
@@ -273,6 +292,7 @@ def pageRank (summ_dict):
 			break
 		else:
 			page_rank = new_page_rank.copy()
+	print()
 	return page_rank
 
 
@@ -289,13 +309,23 @@ sumup=0
 summ_doc={}
 summ_dict={}
 harmunic_dict={}
+doc1_count = 1
+doc_list_size = len(doc_list)
 # Page_Rank_vertex_initialization={}
 # page_rank={}
 for file1 in doc_list:
-	for file2 in doc*_list:
-		f1 = open(f"{path}/{file1}").read()
-		f2 = open(f"{path}/{file2}").read()
-		l1, l2, l3 = similarity(f1,f2)
+	doc2_count = 1
+	f1 = open(f"{path}/{file1}")
+	fr1 = f1.read()
+	for file2 in doc_list:
+		ts1 = time()
+		print('Document : %d / %d ( %d )' % (doc1_count, doc2_count, doc_list_size))
+		doc2_count += 1
+		f2 = open(f"{path}/{file2}")
+		fr2 = f2.read()
+		ts2 = time()
+		l1, l2, l3 = similarity(fr1,fr2)
+		print("similarity time : {}".format(time() - ts2))
 		list_array=[]
 		list_h=[]
 		for i in range(0 , len(l1)-1):
@@ -315,7 +345,12 @@ for file1 in doc_list:
 		name= file1+"_"+file2
 		# harmunic_dict[name]=list_h
 		summ_dict[name]=list_array
-
+		# f2.close()
+		print("loop time : {}".format(time() - ts1))
+	# f1.close()
+	doc1_count += 1
+print()
+print("finish similarity")
 
 
 # print(Page_Rank_vertex_initialization)
@@ -327,29 +362,38 @@ for file1 in doc_list:
 
 # Harmonic between PageRank and HITS
 Harmonic_between_2_algo={}
+print("start page rank ....")
 PR_final_list=pageRank(summ_dict)
-print(PR_final_list)
+# print(PR_final_list)
+print("start hits ....")
 new_HITS_normalize=hits(summ_dict)
-print(new_HITS_normalize)
+# print(new_HITS_normalize)
 for i, j in PR_final_list.items():
 	l = new_HITS_normalize[i]
-	n=(1/float(j))+(1/float(l))
+	if j == 0 :
+		n = 0.0 + (1/float(l))
+		# doc_name = i[0:int(i.find("_"))]
+		# sent_numb = i[int(i.find("_"))+2:len(i)]
+		# l = new_HITS_normalize[i]
+		# print(i , j , l)
+		# f1 = open(f"{path}/{doc_name}").read()
+		# print(get_sentens(f1 , sent_numb))
+	elif l == 0 :
+		n=(1/float(j)) + 0.0
+		# doc_name = i[0:int(i.find("_"))]
+		# sent_numb = i[int(i.find("_"))+2:len(i)]
+		# l = new_HITS_normalize[i]
+		# print(i , j , l)
+		# f1 = open(f"{path}/{doc_name}").read()
+		# print(get_sentens(f1 , sent_numb))
+	else :
+		n=(1/float(j))+(1/float(l))
 	Harmonic_between_2_algo[i]=2/n
 
-# print(Harmonic_between_2_algo)
-# for i in doc_list:
-# 	for k,l in Harmonic_between_2_algo.items():
-# 		doc1_name=k[0:int(k.find("_"))]
-# 		if (doc1_name==i):
-# 			open(f"{path}/{doc1_name}").read()
-# 			if (doc1_name=="!")and(doc1_name=="?")and(doc1_name=="."):
-# 				break
-# 			else:
 
-
-n_sentns = 5
+n_sentns = 3
 harmonic_sorted = sorted(Harmonic_between_2_algo.items(), key=lambda x: x[1], reverse=True)
-print(harmonic_sorted)
+# print(harmonic_sorted)
 
 for i in range(0, n_sentns):
 	k,d = harmonic_sorted[i]
