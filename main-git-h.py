@@ -4,6 +4,7 @@ import sys
 import os
 import spacy
 import numpy as np
+from numpy.linalg import norm
 import math
 
 from spacy.tokenizer import Tokenizer
@@ -14,40 +15,54 @@ import random
 import re
 nlp = spacy.load("en_core_web_sm")
 from spacy.lang.en.stop_words import STOP_WORDS
-
-
 from time import time
-import re  
 import nltk  
 from sklearn.datasets import load_files  
 # nltk.download('stopwords')  
 import pickle  
 # from nltk.corpus import stopwords
 from sklearn.model_selection import train_test_split
-
-
+from scipy.stats import chi2_contingency
 
 def get_sentens(doc, sent_number):
+	summary_dict={}
+	summary_list=[]
 	d = nlp(doc)
-	index = 1
 	for s in d.sents:
 		if index == int(sent_numb) + 1:
-			return s
+			summary_list.append(s)
 		else:
 			index += 1
+	dict_index=0
+	summary_dict[dict_index]=summary_list[0]
+	for i in range(1,len(summary_list)):
+		tmp_dict1={} 
+		tmp_dict2={}
+		for k in summary_list:
+			for l in k:
+				if l in tmp_dict1:
+					tmp_dict1[l] += 1
+				else:
+					tmp_dict1[l] = 1
+		for m,n in summary_dict.items():
+			for p in j:
+				if d in tmp_dict2:
+					tmp_dict2[d] += 1
+				else:
+					tmp_dict2[d] = 1
+		for e,f in tmp_dict1:
+			for w,x in tmp_dict2:
+				
 
-def classification():
-	doc_data = load_files(r"D:\txt_sentoken")  
-	X, y = doc_data.data, doc_data.target 
-	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-	classifier = RandomForestClassifier(n_estimators=1000, random_state=0)  
-	classifier.fit(X_train, y_train)
-	y_pred = classifier.predict(X_test)
-
-
-	with open('text_classifier', 'wb') as picklefile:
-		pickle.dump(classifier,picklefile)
-
+		
+		zig+=tmp_list1[l]* tmp_list2[d]
+		denominator_rad1+=math.sqrt(tmp_list1[l]**2)
+		denominator_rad2+=math.sqrt(tmp_list2[d]**2)
+		cosine=(zig)/
+		if (cosine != 0.7) and (cosine<0.7):
+			dict_index+=1
+			summary_dict[dict_index]=summary_list[i]
+	return summary_dict
 
 def jaccard_similarity(list1, list2):
 	s1 = set(list1)
@@ -133,10 +148,142 @@ def identitysimilarity(s1, s2):
 	prod_ident=fraction_1*sec_fraction
 	return prod_ident
 
-def topic_signature ():
-	pass
+def topic_signature (releventPath, nonreleventPath):
+	r_doc_list = []
+	r_tf = {}
+	all_tf = {}
+	nonr_doc_list = []
+	docs_entropy = {}
+	terms_entropy = {}
+	os.chdir(releventPath)
+	for file in os.listdir():
+		if os.path.isfile(file):
+			doc_terms_entropy = {}
+			doc_tf = {}
+			r_doc_list.append(file)
+			f1 = open(f"{file}").read()
+			d1 = nlp(f1)
+			for tok in d1:
+				if tok.is_stop == False and tok.text.isalpha() == True :
+					t = tok.lemma_.lower()
+					if t in doc_tf:
+						doc_tf[t] += 1
+						all_tf[t] += 1
+						r_tf[t] += 1
+					else:
+						doc_tf[t] = 1
+						if t in r_tf:
+							r_tf[t] += 1
+							all_tf[t] += 1
+						else :
+							r_tf[t] = 1
+							all_tf[t] = 1
+							# if t in all_tf:
+							# 	all_tf[t] += 1
+							# else :
+							# 	all_tf[t] = 1
+			doc_total_terms = sum(doc_tf.values())
+			for k,v in doc_tf.items():
+				pi = v/doc_total_terms
+				doc_terms_entropy[k] = -pi * math.log2(pi) 
+			docs_entropy [file] = sum(doc_terms_entropy.values())
+	os.chdir(nonreleventPath)
+	for file in os.listdir():
+		for file2 in os.listdir(file):
+			if os.path.isfile(os.path.join(file,file2)):
+				doc_terms_entropy = {}
+				doc_tf = {}
+				nonr_doc_list.append(file2)
+				f1 = open(f"{file}/{file2}").read()
+				d1 = nlp(f1)
+				for tok in d1:
+					if tok.is_stop == False and tok.text.isalpha() == True :
+						t = tok.lemma_.lower()
+						if t in doc_tf:
+							doc_tf[t] += 1
+							all_tf[t] += 1
+						else:
+							doc_tf[t] = 1
+							if t in all_tf:
+								all_tf[t] += 1
+							else:
+								all_tf[t] = 1
+				doc_total_terms = sum(doc_tf.values())
+				for k,v in doc_tf.items():
+					pi = v/doc_total_terms
+					doc_terms_entropy[k] = -pi * math.log2(pi) 
+				docs_entropy [file] = sum(doc_terms_entropy.values())
+	
+	all_terms = sum(all_tf.values())
+	all_entropy = 0
+	for k,v in all_tf.items():
+		pi = v/all_terms
+		entropy = -pi * math.log2(pi)
+		all_entropy += entropy 
+		if k in r_tf:
+			terms_entropy [k] = entropy
+	likelihood = {}
+	for k,v in terms_entropy.items():
+		likelihood[k] = 2 * all_terms * (all_entropy - v )
+	
+	sorted_likelihood=dict(sorted(likelihood.items(),key=lambda item : item[1]))
+	# print (sorted_likelihood)
+	# print(len(sorted_likelihood), len(doc_terms_entropy) , len(terms_entropy))
 
-def similarity(doc1, doc2):
+	lh = np.array(list(sorted_likelihood.values()))
+	mean = lh.mean()
+	std = lh.std()
+	size = len(lh)
+	lowerband = mean - 10.83 * ( std / np.sqrt(size) )
+	upperband = mean + 10.83 * ( std / np.sqrt(size) )
+	# print(mean , lowerband, upperband)
+	topicSig=[]
+	for k,v in sorted_likelihood.items():
+		if v > lowerband and v < upperband :
+			topicSig.append(k)
+	# print (topicSig)
+	# print ( len (topicSig))
+	return topicSig
+
+def topic_signature_similarity (topics, s1, s2, d1, d2):
+	tf_s1 = {}
+	tf_s2 = {}
+	for w in s1:
+		if w in topics:
+			if w in tf_s1:
+				tf_s1[w] += 1
+			else:
+				tf_s1[w] = 1
+			
+	for w in s2:
+		if w in topics:
+			if w in tf_s2:
+				tf_s2[w] += 1
+			else:
+			    tf_s2[w] = 1
+	tf_idf_s1 = {}
+	tf_idf_s2 = {}
+	for w in tf_s2:
+		tf_idf_s2[w] = tf_s2[w]/float(d2[w])
+	for w in tf_s1:
+		tf_idf_s1[w] = tf_s1[w]/float(d1[w])
+	zigma = 0
+	for i in tf_s1:
+		if i in tf_s2:
+			zigma += tf_idf_s1[i]*tf_idf_s2[i]
+	r1 = 0
+	r2 = 0
+	for w in tf_s1:
+		r1 += (tf_s1[w]/float(d1[w])) ** 2
+	for w in tf_s2:
+		r2 += (tf_s2[w]/float(d2[w])) ** 2
+	if r1 != 0 and r2 !=0:
+		topic_sim = zigma/float(math.sqrt(r1) * math.sqrt(r2))
+	else:
+		topic_sim = 0
+	return topic_sim
+
+def similarity(doc1, doc2, topics):
 	doc_bin = DocBin(attrs=["LEMMA", "ENT_IOB", "ENT_TYPE"], store_user_data=True)
 	d1 = nlp(doc1)
 	d2 = nlp(doc2)
@@ -145,6 +292,7 @@ def similarity(doc1, doc2):
 	cosine_score = []
 	jaccard_score = []
 	identity_score=[]
+	topic_score = []
 	for tok in d1:
 		if tok.is_stop == False and tok.text.isalpha() == True :
 			t = tok.lemma_.lower()
@@ -167,6 +315,7 @@ def similarity(doc1, doc2):
 		score_list1 = []
 		score_list2 = []
 		score_list3 = []
+		score_list4 = []
 		s1 = [token.lemma_.lower() for token in sentence1 if token.is_stop == False and token.text.isalpha() == True]
 		for sentence2 in d2.sents:
 			s2 = [token.lemma_.lower() for token in sentence2 if token.is_stop == False and token.text.isalpha() == True]
@@ -179,15 +328,17 @@ def similarity(doc1, doc2):
 			ts3 = time()
 			score_list3.append(identitysimilarity(s1, s2))
 			identity_time += time()-ts3
+			score_list4.append(topic_signature_similarity(topics, s1, s2, idf_d1, idf_d2))
 		jaccard_score.append(score_list1)
 		cosine_score.append(score_list2)
 		identity_score.append(score_list3)
-	if jacard_time == 0.0 : 
-		print (jaccard_score)
-	print ("jaccard time : {}".format(jacard_time))
-	print ("cosine time : {}".format(cosine_time))
-	print ("identity time : {}".format(identity_time))
-	return jaccard_score, cosine_score, identity_score
+		topic_score.append(score_list4)
+	# if jacard_time == 0.0 : 
+	# 	print (jaccard_score)
+	# print ("jaccard time : {}".format(jacard_time))
+	# print ("cosine time : {}".format(cosine_time))
+	# print ("identity time : {}".format(identity_time))
+	return jaccard_score, cosine_score, identity_score, topic_score
 
 def hits (summ_dict):
 	neighbors = {}
@@ -212,7 +363,7 @@ def hits (summ_dict):
 	epsilon = 0.0000008
 	new_hits = {}
 	for r in range(replit):
-		print('hits repets : %d' % r , end='\r')
+		# print('hits repets : %d' % r , end='\r')
 		convergence = 0
 		for vi , hits_vi in hits.items():
 			sum_vi = 0
@@ -230,7 +381,7 @@ def hits (summ_dict):
 			break
 		else:
 			hits = new_hits.copy()
-	print()
+	# print()
 	return new_hits
 
 def pageRank (summ_dict):
@@ -262,7 +413,7 @@ def pageRank (summ_dict):
 	replit = 10
 	new_page_rank = {}
 	for r in range(replit):
-		print('Page rank repets : %d' % r , end='\r')
+		# print('Page rank repets : %d' % r , end='\r')
 		convergence = 0
 		for vi , pr_vi in page_rank.items():
 			# print("Vi", vi, pr_vi)
@@ -296,13 +447,19 @@ def pageRank (summ_dict):
 	return page_rank
 
 
+basePath = os.getcwd()
 path = sys.argv[1]
+# nonRePath = os.path.join(basePath, sys.argv[2])
+nonRePath = sys.argv[2]
 os.chdir(path)
 path = os.getcwd()
 doc_list = []
 
+topics = topic_signature(path, nonRePath)
+
+os.chdir(path)
 for file in os.listdir():
-	if file.endswith(".story"):
+	if os.path.isfile(file):
 		doc_list.append(file)
 x=0
 sumup=0
@@ -311,6 +468,7 @@ summ_dict={}
 harmunic_dict={}
 doc1_count = 1
 doc_list_size = len(doc_list)
+# print(doc_list)
 # Page_Rank_vertex_initialization={}
 # page_rank={}
 for file1 in doc_list:
@@ -324,33 +482,53 @@ for file1 in doc_list:
 		f2 = open(f"{path}/{file2}")
 		fr2 = f2.read()
 		ts2 = time()
-		l1, l2, l3 = similarity(fr1,fr2)
-		print("similarity time : {}".format(time() - ts2))
+		l1, l2, l3, l4 = similarity(fr1,fr2, topics)
+		# print("similarity time : {}".format(time() - ts2))
 		list_array=[]
 		list_h=[]
 		for i in range(0 , len(l1)-1):
 			harmunic_list=[]
 			summ_list=[]
+			a=0
+			b=0
+			c=0
+			d=0
+			h=0
 			for j in range(0, len(l1[i])-1):
-				x=(l1[i][j]+l2[i][j]+l3[i][j])/3.0
+				x=(l1[i][j]+l2[i][j]+l3[i][j]+l4[i][j])/4.0
 				summ_list.append(x)
-				# sumup=(1/l1[i][j])+(1/l2[i][j])+(1/l3[i][j])
-				# H=3/sumup
-				# harmunic_list.append(H)
-				# vertex=file2+'_S'+str(len(summ_list))
-				# if vertex not in page_rank:
-					# page_rank[vertex]=random.uniform(0,0.5)
-			# list_h.append(harmunic_list)
+				if (l1[i][j]==0):
+					a=0
+				else:
+					a=1/l1[i][j]
+				if (l2[i][j]==0):
+					b=0
+				else:
+					b=1/l2[i][j]
+				if (l3[i][j]==0):
+					c=0
+				else:
+					c=1/l3[i][j]
+				if (l4[i][j]==0):
+					d=0
+				else:
+					d=1/l4[i][j]
+				if (a+b+c+d==0):
+					h=0
+				else:
+					h=4/(a+b+c+d)
+				harmunic_list.append(h)
+			list_h.append(harmunic_list)
 			list_array.append(summ_list)
 		name= file1+"_"+file2
-		# harmunic_dict[name]=list_h
+		harmunic_dict[name]=list_h
 		summ_dict[name]=list_array
 		# f2.close()
-		print("loop time : {}".format(time() - ts1))
+		# print("loop time : {}".format(time() - ts1))
 	# f1.close()
 	doc1_count += 1
-print()
-print("finish similarity")
+# print()
+# print("finish similarity")
 
 
 # print(Page_Rank_vertex_initialization)
@@ -358,14 +536,14 @@ print("finish similarity")
 # print(neighbor_dict)
 # print(dictionary_value)
 # print(summ_dict)
-# print(harmunic_dict)
+print(harmunic_dict)
 
 # Harmonic between PageRank and HITS
 Harmonic_between_2_algo={}
-print("start page rank ....")
+# print("start page rank ....")
 PR_final_list=pageRank(summ_dict)
 # print(PR_final_list)
-print("start hits ....")
+# print("start hits ....")
 new_HITS_normalize=hits(summ_dict)
 # print(new_HITS_normalize)
 for i, j in PR_final_list.items():
@@ -391,7 +569,7 @@ for i, j in PR_final_list.items():
 	Harmonic_between_2_algo[i]=2/n
 
 
-n_sentns = 3
+n_sentns = 5
 harmonic_sorted = sorted(Harmonic_between_2_algo.items(), key=lambda x: x[1], reverse=True)
 # print(harmonic_sorted)
 
