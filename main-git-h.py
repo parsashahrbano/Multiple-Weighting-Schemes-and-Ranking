@@ -6,7 +6,8 @@ import spacy
 import numpy as np
 from numpy.linalg import norm
 import math
-
+import pandas as pd
+import collections
 from spacy.tokenizer import Tokenizer
 from spacy import displacy
 from spacy import tokens
@@ -25,44 +26,60 @@ from sklearn.model_selection import train_test_split
 from scipy.stats import chi2_contingency
 
 def get_sentens(doc, sent_number):
-	summary_dict={}
-	summary_list=[]
 	d = nlp(doc)
+	index=1
 	for s in d.sents:
 		if index == int(sent_numb) + 1:
-			summary_list.append(s)
+			return s
 		else:
 			index += 1
-	dict_index=0
-	summary_dict[dict_index]=summary_list[0]
-	for i in range(1,len(summary_list)):
-		tmp_dict1={} 
-		tmp_dict2={}
-		for k in summary_list:
-			for l in k:
-				if l in tmp_dict1:
-					tmp_dict1[l] += 1
-				else:
-					tmp_dict1[l] = 1
-		for m,n in summary_dict.items():
-			for p in j:
-				if d in tmp_dict2:
-					tmp_dict2[d] += 1
-				else:
-					tmp_dict2[d] = 1
-		for e,f in tmp_dict1:
-			for w,x in tmp_dict2:
-				
 
-		
-		zig+=tmp_list1[l]* tmp_list2[d]
-		denominator_rad1+=math.sqrt(tmp_list1[l]**2)
-		denominator_rad2+=math.sqrt(tmp_list2[d]**2)
-		cosine=(zig)/
-		if (cosine != 0.7) and (cosine<0.7):
-			dict_index+=1
-			summary_dict[dict_index]=summary_list[i]
-	return summary_dict
+def bow_cosine(s1,s2):
+	bow_list=[]
+	d=nlp(doc)
+	for s1 in d.sents:
+		for w in s1:
+			if w not in bow_list:
+				bow_list.append(w)
+		for x in s2:
+			if x not in bow_list:
+				bow_list.append(x)
+	vector_s1=[]
+	vector_s2=[]
+	for word in bow_list:
+		if word in s1:
+			vector_s1.append(count(word))
+		else:
+			vector_s1.append(0)
+		if word in s2:
+			vector_s2.append(count(word))
+		else:
+			vector_s2.append(0)
+	#nominator
+	cosine_numinator=0
+	for m in vector_s1:
+		for n in vector_s2:
+			cosine_numinator+=m*n
+	#denominator
+	power1_r1=0
+	r1_denom=0
+	for p in vector_s1:
+		power1_r1+=p**2
+		r1_denom=math.sqrt(power1_r1)
+	power2_r2=0
+	r2_denom=0
+	for q in vector_s2:
+		power2_r2+=p**2
+		r2_denom=math.sqrt(power2_r2)
+	cosine_denominator=r1_denom*r2_denom
+	#cosine_fraction
+	if cosine_denominator != 0:
+		cosine_fraction= cosine_numinator/float(cosine_denominator)
+	else:
+		cosine_fraction=0
+	return cosine_fraction
+
+	
 
 def jaccard_similarity(list1, list2):
 	s1 = set(list1)
@@ -536,7 +553,7 @@ for file1 in doc_list:
 # print(neighbor_dict)
 # print(dictionary_value)
 # print(summ_dict)
-print(harmunic_dict)
+# print(harmunic_dict)
 
 # Harmonic between PageRank and HITS
 Harmonic_between_2_algo={}
@@ -572,14 +589,19 @@ for i, j in PR_final_list.items():
 n_sentns = 5
 harmonic_sorted = sorted(Harmonic_between_2_algo.items(), key=lambda x: x[1], reverse=True)
 # print(harmonic_sorted)
-
+list_summary=[]
 for i in range(0, n_sentns):
 	k,d = harmonic_sorted[i]
 	doc_name = k[0:int(k.find("_"))]
 	sent_numb = k[int(k.find("_"))+2:len(k)]
 	f1 = open(f"{path}/{doc_name}").read()
 	print (doc_name , sent_numb , d)
-	print(get_sentens(f1 , sent_numb))
+	s=get_sentens(f1,sent_numb)
+	if not list_summary:
+		list_summary.append(s)
+	elif (bow_cosine(s,*list_summary) < 0.7):
+		list_summary.append(s)
+
 
 
 
