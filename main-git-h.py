@@ -34,27 +34,33 @@ def get_sentens(doc, sent_number):
 		else:
 			index += 1
 
-def bow_cosine(s1,s2):
+def bow_cosine(d1,d2):
 	bow_list=[]
-	d=nlp(doc)
-	for s1 in d.sents:
-		for w in s1:
-			if w not in bow_list:
-				bow_list.append(w)
-		for x in s2:
-			if x not in bow_list:
-				bow_list.append(x)
+	s1=nlp(d1)
+	for w in s1.sents:
+		for t in w:
+			if t.lemma_.lower() not in bow_list:
+				bow_list.append(t.lemma_.lower())
+	for k in d2:
+		x=nlp(k)
+		for y in x.sents:
+			for z in y:
+				if z.lemma_.lower() not in bow_list:
+					bow_list.append(z.lemma_.lower())
 	vector_s1=[]
 	vector_s2=[]
 	for word in bow_list:
-		if word in s1:
-			vector_s1.append(count(word))
-		else:
-			vector_s1.append(0)
-		if word in s2:
-			vector_s2.append(count(word))
-		else:
-			vector_s2.append(0)
+		for wd in s1.sents:
+			if word==wd.lemma_.lower():
+				vector_s1.append(1)
+			else:
+				vector_s1.append(0)
+		for item in d2:
+			for wr in item.sents:
+				if word==wr.lemma_.lower():
+					vector_s2.append(1)
+				else:
+					vector_s2.append(0)
 	#nominator
 	cosine_numinator=0
 	for m in vector_s1:
@@ -96,13 +102,12 @@ def cosine_similarity(s1, s2, d1, d2):
 		if w in tf_s1:
 			tf_s1[w] += 1
 		else:
-			tf_s1[w] = 1
-			
+			tf_s1[w] = 1	
 	for w in s2:
 	    if w in tf_s2:
 	        tf_s2[w] += 1
 	    else:
-	        tf_s2[w] = 1
+		    tf_s2[w] = 1
 	tf_idf_s1 = {}
 	tf_idf_s2 = {}
 	for w in tf_s2:
@@ -589,7 +594,7 @@ for i, j in PR_final_list.items():
 n_sentns = 5
 harmonic_sorted = sorted(Harmonic_between_2_algo.items(), key=lambda x: x[1], reverse=True)
 # print(harmonic_sorted)
-list_summary=[]
+
 for i in range(0, n_sentns):
 	k,d = harmonic_sorted[i]
 	doc_name = k[0:int(k.find("_"))]
@@ -597,10 +602,12 @@ for i in range(0, n_sentns):
 	f1 = open(f"{path}/{doc_name}").read()
 	print (doc_name , sent_numb , d)
 	s=get_sentens(f1,sent_numb)
-	if not list_summary:
+	list_summary=[]
+	if (len(list_summary)==0):
 		list_summary.append(s)
-	elif (bow_cosine(s,*list_summary) < 0.7):
+	elif (bow_cosine(s,list_summary) < 0.7):
 		list_summary.append(s)
+	print(list_summary)
 
 
 
