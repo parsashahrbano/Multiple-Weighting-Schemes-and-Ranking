@@ -34,58 +34,74 @@ def get_sentens(doc, sent_number):
 		else:
 			index += 1
 
-def bow_cosine(d1,d2):
+def bow_cosine(d1,sent_list):
 	bow_list=[]
-	s1=nlp(d1)
-	for w in s1.sents:
-		for t in w:
-			if t.lemma_.lower() not in bow_list:
-				bow_list.append(t.lemma_.lower())
-	for k in d2:
-		x=nlp(k)
-		for y in x.sents:
-			for z in y:
-				if z.lemma_.lower() not in bow_list:
-					bow_list.append(z.lemma_.lower())
+	list_one=[]
+	list_two=[]
 	vector_s1=[]
 	vector_s2=[]
+	# s1=nlp(d1)
+	# for i in s1.sents:
+	for tok in d1:
+		if tok.lemma_.lower() not in list_one:
+			list_one.append(tok.lemma_.lower())	
+	# print(list_one)
+	for j in sent_list:
+		# m=nlp(j)
+		# for k in m.sents:
+		for n in j:
+			if n.lemma_.lower() not in list_two:
+				list_two.append(n.lemma_.lower())
+	# print(list_two)
+	for l in list_one:
+		if l not in bow_list:
+			bow_list.append(l)
+	# print(bow_list)
+	for o in list_two:
+		if o not in bow_list:
+			bow_list.append(o)
+	# print(bow_list)
+	#create vector
 	for word in bow_list:
-		for wd in s1.sents:
-			if word==wd.lemma_.lower():
-				vector_s1.append(1)
-			else:
-				vector_s1.append(0)
-		for item in d2:
-			for wr in item.sents:
-				if word==wr.lemma_.lower():
-					vector_s2.append(1)
-				else:
-					vector_s2.append(0)
+		if word in list_one:
+			vector_s1.append(1)
+		else:
+			vector_s1.append(0)
+	for wd in bow_list:
+		if wd in list_two:
+			vector_s2.append(1)
+		else:
+			vector_s2.append(0)
+	# print(vector_s1)
+	# print(vector_s2)
 	#nominator
 	cosine_numinator=0
-	for m in vector_s1:
-		for n in vector_s2:
-			cosine_numinator+=m*n
+	for m in range(0,len(vector_s1)):
+		cosine_numinator+=vector_s1[m]*vector_s2[m]
+	# print(cosine_numinator)
 	#denominator
 	power1_r1=0
 	r1_denom=0
-	for p in vector_s1:
-		power1_r1+=p**2
+	for p in range(0,len(vector_s1)):
+		power1_r1+=vector_s1[p]**2
 		r1_denom=math.sqrt(power1_r1)
+	# print(r1_denom)
 	power2_r2=0
 	r2_denom=0
-	for q in vector_s2:
-		power2_r2+=p**2
+	for q in range(0,len(vector_s2)):
+		power2_r2+=vector_s2[q]**2
 		r2_denom=math.sqrt(power2_r2)
+	# print(r2_denom)
 	cosine_denominator=r1_denom*r2_denom
+	# print(cosine_denominator)
 	#cosine_fraction
 	if cosine_denominator != 0:
 		cosine_fraction= cosine_numinator/float(cosine_denominator)
 	else:
 		cosine_fraction=0
+	# print(cosine_fraction)
 	return cosine_fraction
 
-	
 
 def jaccard_similarity(list1, list2):
 	s1 = set(list1)
@@ -591,10 +607,10 @@ for i, j in PR_final_list.items():
 	Harmonic_between_2_algo[i]=2/n
 
 
-n_sentns = 5
+n_sentns = 10
 harmonic_sorted = sorted(Harmonic_between_2_algo.items(), key=lambda x: x[1], reverse=True)
 # print(harmonic_sorted)
-
+list_summary=[]
 for i in range(0, n_sentns):
 	k,d = harmonic_sorted[i]
 	doc_name = k[0:int(k.find("_"))]
@@ -602,24 +618,10 @@ for i in range(0, n_sentns):
 	f1 = open(f"{path}/{doc_name}").read()
 	print (doc_name , sent_numb , d)
 	s=get_sentens(f1,sent_numb)
-	list_summary=[]
+	# print("sentence:",s)
 	if (len(list_summary)==0):
 		list_summary.append(s)
+		# print("list:",list_summary)
 	elif (bow_cosine(s,list_summary) < 0.7):
 		list_summary.append(s)
-	print(list_summary)
-
-
-
-
-
-
-
-# print(new_HITS)
-# print(Harmonic_between_2_algo)
-# print(w)
-# print(old_HITS)
-# print(new_HITS_normalize)
-# print(HITS_inial)
-# print(old_HITS)
-# print(HITS_normalize)
+	print(list_summary[0:5])
